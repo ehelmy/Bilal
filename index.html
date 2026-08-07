@@ -68,6 +68,8 @@
     position:absolute;bottom:50%;transform-origin:center bottom}
   .north{position:absolute;top:3px;font-size:8px;color:var(--sand-dim)}
   .foot{text-align:center;font-size:11px;color:var(--sand-dim);margin-top:22px;opacity:.7}
+  .gpsbtn{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:10px 13px;font-size:16px;cursor:pointer;flex:0 0 auto}
   .compass{cursor:pointer}
   .compass.live{border-color:var(--gold);box-shadow:0 0 0 3px rgba(216,178,74,.15)}
   .kaaba{position:absolute;bottom:50%;transform-origin:center bottom;font-size:11px;line-height:1}
@@ -88,6 +90,7 @@
   </div>
 
   <div class="selects">
+    <button class="gpsbtn" onclick="useMyLocation()" title="My location">📍</button>
     <select id="citySel" onchange="onCity()"></select>
     <select id="methodSel" onchange="render()"></select>
   </div>
@@ -178,24 +181,153 @@ function qiblaBearing(lat,lng){
   return(b+360)%360;
 }
 /* ---------- data ---------- */
-const CITIES=[
- {id:"cairo",en:"Cairo",ar:"القاهرة",lat:30.0444,lng:31.2357,tz:"Africa/Cairo",method:"egyptian"},
- {id:"alexandria",en:"Alexandria",ar:"الإسكندرية",lat:31.2001,lng:29.9187,tz:"Africa/Cairo",method:"egyptian"},
- {id:"giza",en:"Giza",ar:"الجيزة",lat:29.9870,lng:31.2118,tz:"Africa/Cairo",method:"egyptian"},
- {id:"makkah",en:"Makkah",ar:"مكة المكرمة",lat:21.4225,lng:39.8262,tz:"Asia/Riyadh",method:"ummalqura"},
- {id:"madinah",en:"Madinah",ar:"المدينة المنورة",lat:24.4672,lng:39.6111,tz:"Asia/Riyadh",method:"ummalqura"},
- {id:"riyadh",en:"Riyadh",ar:"الرياض",lat:24.7136,lng:46.6753,tz:"Asia/Riyadh",method:"ummalqura"},
- {id:"jeddah",en:"Jeddah",ar:"جدة",lat:21.4858,lng:39.1925,tz:"Asia/Riyadh",method:"ummalqura"},
- {id:"dubai",en:"Dubai",ar:"دبي",lat:25.2048,lng:55.2708,tz:"Asia/Dubai",method:"mwl"},
- {id:"abudhabi",en:"Abu Dhabi",ar:"أبوظبي",lat:24.4539,lng:54.3773,tz:"Asia/Dubai",method:"mwl"},
- {id:"doha",en:"Doha",ar:"الدوحة",lat:25.2854,lng:51.5310,tz:"Asia/Qatar",method:"ummalqura"},
- {id:"kuwait",en:"Kuwait City",ar:"الكويت",lat:29.3759,lng:47.9774,tz:"Asia/Kuwait",method:"mwl"},
- {id:"amman",en:"Amman",ar:"عمّان",lat:31.9454,lng:35.9284,tz:"Asia/Amman",method:"mwl"},
- {id:"istanbul",en:"Istanbul",ar:"إسطنبول",lat:41.0082,lng:28.9784,tz:"Europe/Istanbul",method:"mwl"},
- {id:"london",en:"London",ar:"لندن",lat:51.5074,lng:-0.1278,tz:"Europe/London",method:"mwl"},
- {id:"paris",en:"Paris",ar:"باريس",lat:48.8566,lng:2.3522,tz:"Europe/Paris",method:"mwl"},
- {id:"newyork",en:"New York",ar:"نيويورك",lat:40.7128,lng:-74.0060,tz:"America/New_York",method:"isna"},
+const REGIONS=[
+ {en:"My location",ar:"موقعي",cities:[]},
+ {en:"Egypt",ar:"مصر",cities:[
+  {id:"cairo",en:"Cairo",ar:"القاهرة",lat:30.0444,lng:31.2357,tz:"Africa/Cairo",method:"egyptian"},
+  {id:"alexandria",en:"Alexandria",ar:"الإسكندرية",lat:31.2001,lng:29.9187,tz:"Africa/Cairo",method:"egyptian"},
+  {id:"giza",en:"Giza",ar:"الجيزة",lat:29.9870,lng:31.2118,tz:"Africa/Cairo",method:"egyptian"},
+  {id:"mansoura",en:"Mansoura",ar:"المنصورة",lat:31.0409,lng:31.3785,tz:"Africa/Cairo",method:"egyptian"},
+  {id:"tanta",en:"Tanta",ar:"طنطا",lat:30.7865,lng:31.0004,tz:"Africa/Cairo",method:"egyptian"},
+  {id:"zagazig",en:"Zagazig",ar:"الزقازيق",lat:30.5877,lng:31.5020,tz:"Africa/Cairo",method:"egyptian"},
+  {id:"ismailia",en:"Ismailia",ar:"الإسماعيلية",lat:30.5965,lng:32.2715,tz:"Africa/Cairo",method:"egyptian"},
+  {id:"portsaid",en:"Port Said",ar:"بورسعيد",lat:31.2653,lng:32.3019,tz:"Africa/Cairo",method:"egyptian"},
+  {id:"suez",en:"Suez",ar:"السويس",lat:29.9668,lng:32.5498,tz:"Africa/Cairo",method:"egyptian"},
+  {id:"damietta",en:"Damietta",ar:"دمياط",lat:31.4165,lng:31.8133,tz:"Africa/Cairo",method:"egyptian"},
+  {id:"minya",en:"Minya",ar:"المنيا",lat:28.1099,lng:30.7503,tz:"Africa/Cairo",method:"egyptian"},
+  {id:"asyut",en:"Asyut",ar:"أسيوط",lat:27.1809,lng:31.1837,tz:"Africa/Cairo",method:"egyptian"},
+  {id:"sohag",en:"Sohag",ar:"سوهاج",lat:26.5590,lng:31.6957,tz:"Africa/Cairo",method:"egyptian"},
+  {id:"luxor",en:"Luxor",ar:"الأقصر",lat:25.6872,lng:32.6396,tz:"Africa/Cairo",method:"egyptian"},
+  {id:"aswan",en:"Aswan",ar:"أسوان",lat:24.0889,lng:32.8998,tz:"Africa/Cairo",method:"egyptian"},
+  {id:"hurghada",en:"Hurghada",ar:"الغردقة",lat:27.2579,lng:33.8116,tz:"Africa/Cairo",method:"egyptian"},
+  {id:"sharm",en:"Sharm El Sheikh",ar:"شرم الشيخ",lat:27.9158,lng:34.3300,tz:"Africa/Cairo",method:"egyptian"}]},
+ {en:"Saudi Arabia",ar:"السعودية",cities:[
+  {id:"makkah",en:"Makkah",ar:"مكة المكرمة",lat:21.4225,lng:39.8262,tz:"Asia/Riyadh",method:"ummalqura"},
+  {id:"madinah",en:"Madinah",ar:"المدينة المنورة",lat:24.4672,lng:39.6111,tz:"Asia/Riyadh",method:"ummalqura"},
+  {id:"riyadh",en:"Riyadh",ar:"الرياض",lat:24.7136,lng:46.6753,tz:"Asia/Riyadh",method:"ummalqura"},
+  {id:"jeddah",en:"Jeddah",ar:"جدة",lat:21.4858,lng:39.1925,tz:"Asia/Riyadh",method:"ummalqura"},
+  {id:"dammam",en:"Dammam",ar:"الدمام",lat:26.4207,lng:50.0888,tz:"Asia/Riyadh",method:"ummalqura"},
+  {id:"taif",en:"Taif",ar:"الطائف",lat:21.2703,lng:40.4158,tz:"Asia/Riyadh",method:"ummalqura"},
+  {id:"tabuk",en:"Tabuk",ar:"تبوك",lat:28.3838,lng:36.5550,tz:"Asia/Riyadh",method:"ummalqura"},
+  {id:"abha",en:"Abha",ar:"أبها",lat:18.2465,lng:42.5117,tz:"Asia/Riyadh",method:"ummalqura"}]},
+ {en:"Gulf",ar:"الخليج",cities:[
+  {id:"dubai",en:"Dubai",ar:"دبي",lat:25.2048,lng:55.2708,tz:"Asia/Dubai",method:"mwl"},
+  {id:"abudhabi",en:"Abu Dhabi",ar:"أبوظبي",lat:24.4539,lng:54.3773,tz:"Asia/Dubai",method:"mwl"},
+  {id:"sharjah",en:"Sharjah",ar:"الشارقة",lat:25.3463,lng:55.4209,tz:"Asia/Dubai",method:"mwl"},
+  {id:"doha",en:"Doha",ar:"الدوحة",lat:25.2854,lng:51.5310,tz:"Asia/Qatar",method:"ummalqura"},
+  {id:"kuwait",en:"Kuwait City",ar:"الكويت",lat:29.3759,lng:47.9774,tz:"Asia/Kuwait",method:"mwl"},
+  {id:"manama",en:"Manama",ar:"المنامة",lat:26.2285,lng:50.5860,tz:"Asia/Bahrain",method:"mwl"},
+  {id:"muscat",en:"Muscat",ar:"مسقط",lat:23.5880,lng:58.3829,tz:"Asia/Muscat",method:"mwl"}]},
+ {en:"Levant & Iraq",ar:"الشام والعراق",cities:[
+  {id:"amman",en:"Amman",ar:"عمّان",lat:31.9454,lng:35.9284,tz:"Asia/Amman",method:"mwl"},
+  {id:"jerusalem",en:"Jerusalem",ar:"القدس",lat:31.7683,lng:35.2137,tz:"Asia/Jerusalem",method:"mwl"},
+  {id:"gaza",en:"Gaza",ar:"غزة",lat:31.5017,lng:34.4668,tz:"Asia/Gaza",method:"mwl"},
+  {id:"beirut",en:"Beirut",ar:"بيروت",lat:33.8938,lng:35.5018,tz:"Asia/Beirut",method:"mwl"},
+  {id:"damascus",en:"Damascus",ar:"دمشق",lat:33.5138,lng:36.2765,tz:"Asia/Damascus",method:"mwl"},
+  {id:"baghdad",en:"Baghdad",ar:"بغداد",lat:33.3152,lng:44.3661,tz:"Asia/Baghdad",method:"mwl"},
+  {id:"basra",en:"Basra",ar:"البصرة",lat:30.5081,lng:47.7835,tz:"Asia/Baghdad",method:"mwl"},
+  {id:"mosul",en:"Mosul",ar:"الموصل",lat:36.3350,lng:43.1189,tz:"Asia/Baghdad",method:"mwl"},
+  {id:"erbil",en:"Erbil",ar:"أربيل",lat:36.1911,lng:44.0092,tz:"Asia/Baghdad",method:"mwl"}]},
+ {en:"North Africa",ar:"شمال أفريقيا",cities:[
+  {id:"tripoli",en:"Tripoli",ar:"طرابلس",lat:32.8872,lng:13.1913,tz:"Africa/Tripoli",method:"mwl"},
+  {id:"benghazi",en:"Benghazi",ar:"بنغازي",lat:32.1167,lng:20.0667,tz:"Africa/Tripoli",method:"mwl"},
+  {id:"tunis",en:"Tunis",ar:"تونس",lat:36.8065,lng:10.1815,tz:"Africa/Tunis",method:"mwl"},
+  {id:"algiers",en:"Algiers",ar:"الجزائر",lat:36.7538,lng:3.0588,tz:"Africa/Algiers",method:"mwl"},
+  {id:"oran",en:"Oran",ar:"وهران",lat:35.6969,lng:-0.6331,tz:"Africa/Algiers",method:"mwl"},
+  {id:"casablanca",en:"Casablanca",ar:"الدار البيضاء",lat:33.5731,lng:-7.5898,tz:"Africa/Casablanca",method:"mwl"},
+  {id:"rabat",en:"Rabat",ar:"الرباط",lat:34.0209,lng:-6.8416,tz:"Africa/Casablanca",method:"mwl"},
+  {id:"marrakesh",en:"Marrakesh",ar:"مراكش",lat:31.6295,lng:-7.9811,tz:"Africa/Casablanca",method:"mwl"},
+  {id:"fes",en:"Fes",ar:"فاس",lat:34.0181,lng:-5.0078,tz:"Africa/Casablanca",method:"mwl"},
+  {id:"khartoum",en:"Khartoum",ar:"الخرطوم",lat:15.5007,lng:32.5599,tz:"Africa/Khartoum",method:"mwl"},
+  {id:"nouakchott",en:"Nouakchott",ar:"نواكشوط",lat:18.0735,lng:-15.9582,tz:"Africa/Nouakchott",method:"mwl"}]},
+ {en:"Africa",ar:"أفريقيا",cities:[
+  {id:"mogadishu",en:"Mogadishu",ar:"مقديشو",lat:2.0469,lng:45.3182,tz:"Africa/Mogadishu",method:"mwl"},
+  {id:"djibouti",en:"Djibouti",ar:"جيبوتي",lat:11.5721,lng:43.1456,tz:"Africa/Djibouti",method:"mwl"},
+  {id:"addis",en:"Addis Ababa",ar:"أديس أبابا",lat:9.0300,lng:38.7400,tz:"Africa/Addis_Ababa",method:"mwl"},
+  {id:"nairobi",en:"Nairobi",ar:"نيروبي",lat:-1.2921,lng:36.8219,tz:"Africa/Nairobi",method:"mwl"},
+  {id:"daressalaam",en:"Dar es Salaam",ar:"دار السلام",lat:-6.7924,lng:39.2083,tz:"Africa/Dar_es_Salaam",method:"mwl"},
+  {id:"lagos",en:"Lagos",ar:"لاغوس",lat:6.5244,lng:3.3792,tz:"Africa/Lagos",method:"mwl"},
+  {id:"abuja",en:"Abuja",ar:"أبوجا",lat:9.0765,lng:7.3986,tz:"Africa/Lagos",method:"mwl"},
+  {id:"kano",en:"Kano",ar:"كانو",lat:12.0022,lng:8.5920,tz:"Africa/Lagos",method:"mwl"},
+  {id:"dakar",en:"Dakar",ar:"داكار",lat:14.7167,lng:-17.4677,tz:"Africa/Dakar",method:"mwl"},
+  {id:"bamako",en:"Bamako",ar:"باماكو",lat:12.6392,lng:-8.0029,tz:"Africa/Bamako",method:"mwl"},
+  {id:"johannesburg",en:"Johannesburg",ar:"جوهانسبرغ",lat:-26.2041,lng:28.0473,tz:"Africa/Johannesburg",method:"mwl"},
+  {id:"capetown",en:"Cape Town",ar:"كيب تاون",lat:-33.9249,lng:18.4241,tz:"Africa/Johannesburg",method:"mwl"}]},
+ {en:"Turkey",ar:"تركيا",cities:[
+  {id:"istanbul",en:"Istanbul",ar:"إسطنبول",lat:41.0082,lng:28.9784,tz:"Europe/Istanbul",method:"mwl"},
+  {id:"ankara",en:"Ankara",ar:"أنقرة",lat:39.9334,lng:32.8597,tz:"Europe/Istanbul",method:"mwl"},
+  {id:"izmir",en:"Izmir",ar:"إزمير",lat:38.4237,lng:27.1428,tz:"Europe/Istanbul",method:"mwl"},
+  {id:"bursa",en:"Bursa",ar:"بورصة",lat:40.1885,lng:29.0610,tz:"Europe/Istanbul",method:"mwl"}]},
+ {en:"Iran & Central Asia",ar:"إيران وآسيا الوسطى",cities:[
+  {id:"tehran",en:"Tehran",ar:"طهران",lat:35.6892,lng:51.3890,tz:"Asia/Tehran",method:"mwl"},
+  {id:"mashhad",en:"Mashhad",ar:"مشهد",lat:36.2605,lng:59.6168,tz:"Asia/Tehran",method:"mwl"},
+  {id:"kabul",en:"Kabul",ar:"كابول",lat:34.5553,lng:69.2075,tz:"Asia/Kabul",method:"karachi"},
+  {id:"tashkent",en:"Tashkent",ar:"طشقند",lat:41.2995,lng:69.2401,tz:"Asia/Tashkent",method:"mwl"},
+  {id:"almaty",en:"Almaty",ar:"ألماتي",lat:43.2220,lng:76.8512,tz:"Asia/Almaty",method:"mwl"},
+  {id:"baku",en:"Baku",ar:"باكو",lat:40.4093,lng:49.8671,tz:"Asia/Baku",method:"mwl"}]},
+ {en:"South Asia",ar:"جنوب آسيا",cities:[
+  {id:"karachi",en:"Karachi",ar:"كراتشي",lat:24.8607,lng:67.0011,tz:"Asia/Karachi",method:"karachi"},
+  {id:"lahore",en:"Lahore",ar:"لاهور",lat:31.5204,lng:74.3587,tz:"Asia/Karachi",method:"karachi"},
+  {id:"islamabad",en:"Islamabad",ar:"إسلام آباد",lat:33.6844,lng:73.0479,tz:"Asia/Karachi",method:"karachi"},
+  {id:"peshawar",en:"Peshawar",ar:"بيشاور",lat:34.0151,lng:71.5249,tz:"Asia/Karachi",method:"karachi"},
+  {id:"delhi",en:"Delhi",ar:"دلهي",lat:28.7041,lng:77.1025,tz:"Asia/Kolkata",method:"karachi"},
+  {id:"mumbai",en:"Mumbai",ar:"مومباي",lat:19.0760,lng:72.8777,tz:"Asia/Kolkata",method:"karachi"},
+  {id:"hyderabad",en:"Hyderabad",ar:"حيدر آباد",lat:17.3850,lng:78.4867,tz:"Asia/Kolkata",method:"karachi"},
+  {id:"dhaka",en:"Dhaka",ar:"دكا",lat:23.8103,lng:90.4125,tz:"Asia/Dhaka",method:"karachi"},
+  {id:"colombo",en:"Colombo",ar:"كولومبو",lat:6.9271,lng:79.8612,tz:"Asia/Colombo",method:"karachi"}]},
+ {en:"Southeast Asia",ar:"جنوب شرق آسيا",cities:[
+  {id:"jakarta",en:"Jakarta",ar:"جاكرتا",lat:-6.2088,lng:106.8456,tz:"Asia/Jakarta",method:"mwl"},
+  {id:"surabaya",en:"Surabaya",ar:"سورابايا",lat:-7.2575,lng:112.7521,tz:"Asia/Jakarta",method:"mwl"},
+  {id:"bandung",en:"Bandung",ar:"باندونغ",lat:-6.9175,lng:107.6191,tz:"Asia/Jakarta",method:"mwl"},
+  {id:"medan",en:"Medan",ar:"ميدان",lat:3.5952,lng:98.6722,tz:"Asia/Jakarta",method:"mwl"},
+  {id:"kualalumpur",en:"Kuala Lumpur",ar:"كوالالمبور",lat:3.1390,lng:101.6869,tz:"Asia/Kuala_Lumpur",method:"mwl"},
+  {id:"singapore",en:"Singapore",ar:"سنغافورة",lat:1.3521,lng:103.8198,tz:"Asia/Singapore",method:"mwl"},
+  {id:"brunei",en:"Bandar Seri Begawan",ar:"بروناي",lat:4.9031,lng:114.9398,tz:"Asia/Brunei",method:"mwl"},
+  {id:"manila",en:"Manila",ar:"مانيلا",lat:14.5995,lng:120.9842,tz:"Asia/Manila",method:"mwl"}]},
+ {en:"Europe",ar:"أوروبا",cities:[
+  {id:"london",en:"London",ar:"لندن",lat:51.5074,lng:-0.1278,tz:"Europe/London",method:"mwl"},
+  {id:"birmingham",en:"Birmingham",ar:"برمنغهام",lat:52.4862,lng:-1.8904,tz:"Europe/London",method:"mwl"},
+  {id:"manchester",en:"Manchester",ar:"مانشستر",lat:53.4808,lng:-2.2426,tz:"Europe/London",method:"mwl"},
+  {id:"paris",en:"Paris",ar:"باريس",lat:48.8566,lng:2.3522,tz:"Europe/Paris",method:"mwl"},
+  {id:"marseille",en:"Marseille",ar:"مارسيليا",lat:43.2965,lng:5.3698,tz:"Europe/Paris",method:"mwl"},
+  {id:"berlin",en:"Berlin",ar:"برلين",lat:52.5200,lng:13.4050,tz:"Europe/Berlin",method:"mwl"},
+  {id:"munich",en:"Munich",ar:"ميونخ",lat:48.1351,lng:11.5820,tz:"Europe/Berlin",method:"mwl"},
+  {id:"frankfurt",en:"Frankfurt",ar:"فرانكفورت",lat:50.1109,lng:8.6821,tz:"Europe/Berlin",method:"mwl"},
+  {id:"amsterdam",en:"Amsterdam",ar:"أمستردام",lat:52.3676,lng:4.9041,tz:"Europe/Amsterdam",method:"mwl"},
+  {id:"brussels",en:"Brussels",ar:"بروكسل",lat:50.8503,lng:4.3517,tz:"Europe/Brussels",method:"mwl"},
+  {id:"vienna",en:"Vienna",ar:"فيينا",lat:48.2082,lng:16.3738,tz:"Europe/Vienna",method:"mwl"},
+  {id:"rome",en:"Rome",ar:"روما",lat:41.9028,lng:12.4964,tz:"Europe/Rome",method:"mwl"},
+  {id:"milan",en:"Milan",ar:"ميلانو",lat:45.4642,lng:9.1900,tz:"Europe/Rome",method:"mwl"},
+  {id:"madrid",en:"Madrid",ar:"مدريد",lat:40.4168,lng:-3.7038,tz:"Europe/Madrid",method:"mwl"},
+  {id:"barcelona",en:"Barcelona",ar:"برشلونة",lat:41.3874,lng:2.1686,tz:"Europe/Madrid",method:"mwl"},
+  {id:"stockholm",en:"Stockholm",ar:"ستوكهولم",lat:59.3293,lng:18.0686,tz:"Europe/Stockholm",method:"mwl"},
+  {id:"copenhagen",en:"Copenhagen",ar:"كوبنهاغن",lat:55.6761,lng:12.5683,tz:"Europe/Copenhagen",method:"mwl"},
+  {id:"oslo",en:"Oslo",ar:"أوسلو",lat:59.9139,lng:10.7522,tz:"Europe/Oslo",method:"mwl"},
+  {id:"moscow",en:"Moscow",ar:"موسكو",lat:55.7558,lng:37.6173,tz:"Europe/Moscow",method:"mwl"},
+  {id:"kazan",en:"Kazan",ar:"قازان",lat:55.8304,lng:49.0661,tz:"Europe/Moscow",method:"mwl"},
+  {id:"sarajevo",en:"Sarajevo",ar:"سراييفو",lat:43.8563,lng:18.4131,tz:"Europe/Sarajevo",method:"mwl"},
+  {id:"tirana",en:"Tirana",ar:"تيرانا",lat:41.3275,lng:19.8187,tz:"Europe/Tirane",method:"mwl"}]},
+ {en:"Americas",ar:"الأمريكتان",cities:[
+  {id:"newyork",en:"New York",ar:"نيويورك",lat:40.7128,lng:-74.0060,tz:"America/New_York",method:"isna"},
+  {id:"washington",en:"Washington DC",ar:"واشنطن",lat:38.9072,lng:-77.0369,tz:"America/New_York",method:"isna"},
+  {id:"chicago",en:"Chicago",ar:"شيكاغو",lat:41.8781,lng:-87.6298,tz:"America/Chicago",method:"isna"},
+  {id:"houston",en:"Houston",ar:"هيوستن",lat:29.7604,lng:-95.3698,tz:"America/Chicago",method:"isna"},
+  {id:"dallas",en:"Dallas",ar:"دالاس",lat:32.7767,lng:-96.7970,tz:"America/Chicago",method:"isna"},
+  {id:"detroit",en:"Detroit",ar:"ديترويت",lat:42.3314,lng:-83.0458,tz:"America/Detroit",method:"isna"},
+  {id:"losangeles",en:"Los Angeles",ar:"لوس أنجلوس",lat:34.0522,lng:-118.2437,tz:"America/Los_Angeles",method:"isna"},
+  {id:"sanfrancisco",en:"San Francisco",ar:"سان فرانسيسكو",lat:37.7749,lng:-122.4194,tz:"America/Los_Angeles",method:"isna"},
+  {id:"toronto",en:"Toronto",ar:"تورونتو",lat:43.6532,lng:-79.3832,tz:"America/Toronto",method:"isna"},
+  {id:"montreal",en:"Montreal",ar:"مونتريال",lat:45.5017,lng:-73.5673,tz:"America/Toronto",method:"isna"},
+  {id:"vancouver",en:"Vancouver",ar:"فانكوفر",lat:49.2827,lng:-123.1207,tz:"America/Vancouver",method:"isna"},
+  {id:"saopaulo",en:"São Paulo",ar:"ساو باولو",lat:-23.5505,lng:-46.6333,tz:"America/Sao_Paulo",method:"mwl"},
+  {id:"buenosaires",en:"Buenos Aires",ar:"بوينس آيرس",lat:-34.6037,lng:-58.3816,tz:"America/Argentina/Buenos_Aires",method:"mwl"}]},
+ {en:"Oceania",ar:"أوقيانوسيا",cities:[
+  {id:"sydney",en:"Sydney",ar:"سيدني",lat:-33.8688,lng:151.2093,tz:"Australia/Sydney",method:"mwl"},
+  {id:"melbourne",en:"Melbourne",ar:"ملبورن",lat:-37.8136,lng:144.9631,tz:"Australia/Melbourne",method:"mwl"},
+  {id:"perth",en:"Perth",ar:"بيرث",lat:-31.9505,lng:115.8605,tz:"Australia/Perth",method:"mwl"},
+  {id:"auckland",en:"Auckland",ar:"أوكلاند",lat:-36.8485,lng:174.7633,tz:"Pacific/Auckland",method:"mwl"}]}
 ];
+const CITIES=REGIONS.flatMap(r=>r.cities);
 const PRAYERS=[
  {key:"fajr",en:"Fajr",ar:"الفجر"},
  {key:"sunrise",en:"Sunrise",ar:"الشروق"},
@@ -207,13 +339,48 @@ const PRAYERS=[
 /* ---------- state ---------- */
 let lang=localStorage.getItem("pt_lang")||"ar";
 let cityId=localStorage.getItem("pt_city")||"cairo";
+let gpsData=null;
+try{gpsData=JSON.parse(localStorage.getItem("pt_gps")||"null")}catch(e){}
+if(cityId==="gps"&&!gpsData)cityId="cairo";
 const isAr=()=>lang==="ar";
 const T=(en,ar)=>isAr()?ar:en;
-const city=()=>CITIES.find(c=>c.id===cityId);
+function gpsCity(){
+  return {id:"gps",en:"My location",ar:"موقعي الحالي",lat:gpsData.lat,lng:gpsData.lng,
+    tz:Intl.DateTimeFormat().resolvedOptions().timeZone,method:gpsData.method};
+}
+const city=()=>(cityId==="gps"&&gpsData)?gpsCity():(CITIES.find(c=>c.id===cityId)||CITIES[0]);
+function guessMethod(lat,lng){
+  if(lng>=24&&lng<=37&&lat>=21&&lat<=32)return"egyptian";
+  if(lng>=34&&lng<=56&&lat>=16&&lat<=32.5)return"ummalqura";
+  if(lng<-30)return"isna";
+  if(lng>=60&&lng<=92&&lat>=5&&lat<=38)return"karachi";
+  return"mwl";
+}
+function useMyLocation(){
+  if(!navigator.geolocation){alert(T("Location not supported on this device","تحديد الموقع غير مدعوم على هذا الجهاز"));return}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const lat=pos.coords.latitude,lng=pos.coords.longitude;
+    gpsData={lat,lng,method:guessMethod(lat,lng)};
+    localStorage.setItem("pt_gps",JSON.stringify(gpsData));
+    cityId="gps";
+    localStorage.setItem("pt_city","gps");
+    fillSelects();
+    document.getElementById("methodSel").value=gpsData.method;
+    render();
+  },err=>{
+    alert(T("Could not get location. Allow location access in Safari settings.","تعذر تحديد الموقع. اسمح بالوصول للموقع من إعدادات المتصفح."));
+  },{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
+}
 
 function fillSelects(){
   const cs=document.getElementById("citySel");
-  cs.innerHTML=CITIES.map(c=>`<option value="${c.id}" ${c.id===cityId?"selected":""}>${isAr()?c.ar:c.en}</option>`).join("");
+  let html="";
+  if(gpsData)html+=`<option value="gps" ${cityId==="gps"?"selected":""}>📍 ${isAr()?"موقعي الحالي":"My location"}</option>`;
+  html+=REGIONS.filter(r=>r.cities.length).map(r=>
+    `<optgroup label="${isAr()?r.ar:r.en}">`+
+    r.cities.map(c=>`<option value="${c.id}" ${c.id===cityId?"selected":""}>${isAr()?c.ar:c.en}</option>`).join("")+
+    `</optgroup>`).join("");
+  cs.innerHTML=html;
   const ms=document.getElementById("methodSel");
   const cur=ms.value||city().method;
   ms.innerHTML=Object.entries(METHODS).map(([k,m])=>`<option value="${k}" ${k===cur?"selected":""}>${isAr()?m.ar:m.en}</option>`).join("");
